@@ -48,6 +48,8 @@ python tools\update_snapshot.py --push
 | `dist/arch_dims.rbz` | 설치 파일 |
 | `tools/update_snapshot.py` | 법령 스냅샷 생성·푸시 |
 | `law_snapshot.json` | 배포되는 법령 스냅샷 (자동 생성) |
+| `tools/update_lawdb.py` | 법령 전문·전국 조례 수집 후 `lawdb/` 생성·푸시 |
+| `lawdb/` | 법령 보기 화면용 데이터 (법령 12개, 전국 건축·도시계획·주차장 조례) |
 
 ## 주의
 

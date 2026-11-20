@@ -139,7 +139,7 @@ dd{margin:0}
 .lawbox .art pre{margin:0;white-space:pre-wrap;font-family:inherit;font-size:12px;max-height:240px;overflow:auto;background:#fafafc;border:1px solid #eee;border-radius:6px;padding:7px 8px}
 .lawbox .err{color:#b3261e;font-size:12px}
 .lawbox mark.v{background:#ffe0a8}
-.lawbox .lbtn{border:0;background:transparent;color:var(--law);cursor:pointer;font-size:11px;text-decoration:underline;padding:0}
+.lbtn{border:0;background:transparent;color:var(--law);cursor:pointer;font-size:11px;text-decoration:underline;padding:0}
 .chg{display:inline-block;margin-left:5px;padding:0 6px;border-radius:8px;background:#fdecd8;color:#a2560c;font-size:10px;font-weight:600;vertical-align:2px}
 #apiModal{position:fixed;inset:0;background:rgba(20,25,35,.45);display:none;align-items:center;justify-content:center;z-index:10}
 #apiModal .card{width:460px;max-height:85%;background:#fff;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.2)}
@@ -158,6 +158,36 @@ dd{margin:0}
 #askModal .ft{display:flex;justify-content:flex-end;gap:6px;padding:12px 18px;border-top:1px solid var(--line)}
 .radio{display:flex;gap:14px;margin:6px 0}
 .radio label{display:flex;gap:5px;align-items:center;cursor:pointer}
+#lv{position:fixed;inset:0;background:#fff;z-index:9;display:none;grid-template-rows:auto 1fr}
+#lvTop{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+#lvTop h2{margin:0;font-size:15px;white-space:nowrap}
+#lvQ{flex:1;max-width:420px;height:34px;padding:0 10px;border:1px solid #cdd2dc;border-radius:8px;font-size:13px;outline:none;min-width:80px}
+#lvBody{display:grid;grid-template-columns:250px 220px minmax(0,1fr);min-height:0}
+#lvNav,#lvToc{overflow-y:auto;border-right:1px solid var(--line);min-width:0}
+#lvNav{padding:10px;background:#fafbfc}
+#lvNav select{width:100%;padding:6px 8px;border:1px solid #cdd2dc;border-radius:6px;font-size:13px;margin-bottom:6px;font-family:inherit}
+#lvNav h6,#lvToc h6{margin:10px 4px 4px;font-size:11px;color:#9097a6;font-weight:600}
+.lvIt{padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;line-height:1.4}
+.lvIt:hover{background:#eef1f6}
+.lvIt.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.lvIt small{display:block;color:#9097a6;font-weight:normal;font-size:11px}
+#lvToc{padding:6px}
+.tocIt{padding:4px 8px;border-radius:5px;cursor:pointer;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tocIt:hover{background:#eef1f6}
+.tocIt.h{font-weight:700;color:#3a4152;margin-top:6px;cursor:default}
+#lvDoc{overflow-y:auto;padding:16px 22px 60px;min-width:0}
+#lvHead{margin-bottom:14px}
+#lvHead h3{margin:0 0 4px;font-size:18px}
+#lvHead .meta{color:var(--sub);font-size:12px}
+.pt{margin:0 0 14px}
+.pt.h{font-size:14px;font-weight:700;margin:22px 0 10px;padding-bottom:5px;border-bottom:2px solid var(--line)}
+.pt b{display:block;font-size:13px;margin-bottom:3px}
+.pt pre{margin:0;white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.7;overflow-wrap:anywhere}
+.pt.y pre,.pt.b pre{background:#fafafc;border:1px solid #eee;border-radius:6px;padding:8px 10px;font-size:12px;max-height:420px;overflow:auto}
+.pt .fl{margin-top:5px;display:flex;gap:10px}
+.sect{font-size:12px;font-weight:700;color:var(--law);margin:26px 0 10px;padding:5px 10px;background:var(--law-soft);border-radius:6px}
+.lvEmpty{color:#9097a6;text-align:center;margin-top:80px;line-height:1.8}
+@media (max-width:900px){#lvBody{grid-template-columns:200px minmax(0,1fr)}#lvToc{display:none}}
 </style>
 </head>
 <body>
@@ -171,6 +201,7 @@ dd{margin:0}
     <div class="seg" id="units"><button data-u="mm" class="on">mm</button><button data-u="cm">cm</button><button data-u="m">m</button></div>
     <label class="toggle"><input type="checkbox" id="lawOnly">법정 기준만</label>
     <button class="btn" id="glBtn">용어 풀이</button>
+    <button class="btn" id="lvBtn">법령 보기</button>
     <button class="btn" id="apiBtn">설정</button>
     <button class="btn" id="updBtn"></button>
   </div>
@@ -195,6 +226,14 @@ dd{margin:0}
 </div>
 <div id="toast"></div>
 <div id="tip"></div>
+<div id="lv">
+  <div id="lvTop"><h2>법령 보기</h2>
+    <div class="seg" id="lvTab"><button data-t="law" class="on">법령</button><button data-t="ordin">조례</button></div>
+    <input id="lvQ" placeholder="이 법령 안에서 검색 (예: 건폐율, 대지안의 공지)">
+    <span class="note" id="lvCnt" style="color:var(--sub);font-size:12px"></span>
+    <span style="flex:1"></span><button class="btn" id="lvClose">닫기 (Esc)</button></div>
+  <div id="lvBody"><div id="lvNav"></div><div id="lvToc"></div><div id="lvDoc"></div></div>
+</div>
 <div id="askModal">
   <div class="card">
     <h4>자동 업데이트를 켤까요?</h4>
@@ -491,6 +530,81 @@ var App = (function () {
     data.forEach(function (d) { if (isLaw(d) && !d.user) { var n = lawName(d.src); if (!seen[lnorm(n)]) { seen[lnorm(n)] = 1; out.push(n); } } });
     return out;
   }
+
+  var LV = { idx: null, tab: 'law', sido: '', sgg: '', file: '', doc: null, docs: {}, wait: {} };
+  function lvReq(path, key) {
+    if (LV.wait[path]) return; LV.wait[path] = 1;
+    if (window.sketchup && sketchup.lawdbGet) sketchup.lawdbGet(path, key || '');
+    else fetch('https://raw.githubusercontent.com/geonumul/ArchiDims/main/lawdb/' + path).then(function (r) { return r.json(); }).then(function (d) { lawdb({ path: path, ok: true, data: d }); }).catch(function (e) { lawdb({ path: path, ok: false, error: String(e) }); });
+  }
+  function lawdb(r) {
+    delete LV.wait[r.path];
+    if (!r.ok) { $('lvDoc').innerHTML = '<div class="lvEmpty">' + esc(r.error || '불러오지 못했습니다') + '</div>'; return; }
+    if (r.path === 'index.json') { LV.idx = r.data; lvNav(); return; }
+    LV.docs[r.path] = r.data;
+    if (r.path === LV.file) { LV.doc = r.data; lvDoc(); }
+  }
+  function lvOpen() {
+    $('lv').style.display = 'grid';
+    if (!LV.idx) { $('lvNav').innerHTML = '<div class="lvEmpty">목록 불러오는 중...</div>'; lvReq('index.json', ''); } else lvNav();
+    if (!LV.doc) $('lvDoc').innerHTML = '<div class="lvEmpty">왼쪽에서 법령이나 조례를 고르세요</div>';
+  }
+  function lvItem(it, sub) {
+    return '<div class="lvIt' + (it.file === LV.file ? ' on' : '') + '" data-f="' + esc(it.file) + '" data-e="' + esc(it.eff) + '">' + esc(it.name) + '<small>' + (sub ? esc(sub) + ' · ' : '') + '시행 ' + ymd(it.eff) + '</small></div>';
+  }
+  function lvNav() {
+    var ix = LV.idx, h = '';
+    if (!ix) return;
+    if (LV.tab === 'law') {
+      ix.laws.forEach(function (l) { h += lvItem(l, l.kind); });
+    } else {
+      var sidos = Object.keys(ix.sido);
+      if (!LV.sido || !ix.sido[LV.sido]) LV.sido = sidos[0];
+      var sggs = Object.keys(ix.sido[LV.sido]).filter(function (x) { return x; });
+      if (LV.sgg && sggs.indexOf(LV.sgg) < 0) LV.sgg = '';
+      h += '<select id="lvSido">' + sidos.map(function (x) { return '<option' + (x === LV.sido ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select>';
+      h += '<select id="lvSgg"><option value="">(시·도 전체 조례)</option>' + sggs.map(function (x) { return '<option' + (x === LV.sgg ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select>';
+      var lab = { '건축': '건축', '계획': '도시계획', '주차': '주차장' };
+      if (LV.sgg) {
+        var own = ix.sido[LV.sido][LV.sgg] || [];
+        h += '<h6>' + esc(LV.sgg) + '</h6>' + own.map(function (o) { return lvItem(o, lab[o.type]); }).join('');
+        var miss = ['건축', '계획', '주차'].filter(function (t) { return !own.some(function (o) { return o.type === t; }); });
+        if (miss.length) h += '<div class="note" style="margin:6px 4px;color:#9097a6;font-size:11px">' + miss.map(function (t) { return lab[t]; }).join('·') + ' 조례는 따로 없어 아래 시·도 조례를 봅니다</div>';
+      }
+      var up = ix.sido[LV.sido][''] || [];
+      if (up.length) h += '<h6>' + esc(LV.sido) + '</h6>' + up.map(function (o) { return lvItem(o, lab[o.type]); }).join('');
+    }
+    h += '<div class="note" style="margin:14px 4px 0;color:#9097a6;font-size:11px">' + esc(ix.generated || '') + ' 기준</div>';
+    $('lvNav').innerHTML = h;
+  }
+  function lvPick(file, eff) {
+    LV.file = file; LV.doc = LV.docs[file] || null; lvNav();
+    if (LV.doc) lvDoc(); else { $('lvToc').innerHTML = ''; $('lvDoc').innerHTML = '<div class="lvEmpty">불러오는 중...</div>'; lvReq(file, eff); }
+  }
+  function lvHl(text, q) {
+    var s = esc(text); if (!q) return s;
+    return s.replace(new RegExp(esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), function (m) { return '<mark>' + m + '</mark>'; });
+  }
+  function lvDoc() {
+    var d = LV.doc, q = $('lvQ').value.trim(), ql = q.toLowerCase(), toc = '', h = '', n = 0, last = '';
+    var names = { a: '', b: '부칙', y: '별표·서식' };
+    h += '<div id="lvHead"><h3>' + esc(d.name) + '</h3><div class="meta">' + esc(d.kind || '') + ' · 시행 ' + ymd(d.eff) + (d.prom ? ' · 공포 ' + ymd(d.prom) : '') + ' · <button class="lbtn" data-url="' + esc(d.url) + '">국가법령정보센터에서 열기</button></div></div>';
+    d.parts.forEach(function (p, i) {
+      var hit = !ql || ((p.t || '') + ' ' + (p.x || '')).toLowerCase().indexOf(ql) >= 0;
+      if (p.k === 'h') { if (!ql) { toc += '<div class="tocIt h">' + esc(p.t) + '</div>'; h += '<div class="pt h">' + esc(p.t) + '</div>'; } return; }
+      if (!hit) return;
+      n++;
+      if (p.k !== 'a' && p.k !== last) { toc += '<div class="tocIt h">' + names[p.k] + '</div>'; h += '<div class="sect">' + names[p.k] + '</div>'; }
+      last = p.k;
+      toc += '<div class="tocIt" data-i="' + i + '" title="' + esc(p.t) + '">' + esc(p.t) + '</div>';
+      h += '<div class="pt ' + p.k + '" id="pt' + i + '">' + (p.k === 'a' ? '' : '<b>' + lvHl(p.t, q) + '</b>') + (p.x ? '<pre>' + lvHl(p.x, q) + '</pre>' : '');
+      if (p.pdf || p.hwp) h += '<div class="fl">' + (p.pdf ? '<button class="lbtn" data-url="' + esc(p.pdf) + '">PDF 받기</button>' : '') + (p.hwp ? '<button class="lbtn" data-url="' + esc(p.hwp) + '">한글(HWP) 받기</button>' : '') + '</div>';
+      h += '</div>';
+    });
+    if (!n) h += '<div class="lvEmpty">검색 결과가 없습니다</div>';
+    $('lvCnt').textContent = q ? n + '곳에서 찾음' : '';
+    $('lvToc').innerHTML = toc; $('lvDoc').innerHTML = h; $('lvDoc').scrollTop = 0;
+  }
   function terms() { return $('q').value.trim().toLowerCase().split(/\s+/).filter(Boolean); }
   function match(d, ts) {
     if (!ts.length) return true;
@@ -657,12 +771,27 @@ var App = (function () {
       $('apiRes').innerHTML = '<div class="note">법령 ' + lawNames().length + '개 조회 중...</div>';
       sketchup.lawCheckAll(JSON.stringify(lawNames()));
     });
+    $('lvBtn').addEventListener('click', lvOpen);
+    $('lvClose').addEventListener('click', function () { $('lv').style.display = 'none'; });
+    $('lvTab').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return; LV.tab = b.getAttribute('data-t');
+      [].forEach.call(this.children, function (x) { x.classList.toggle('on', x === b); }); lvNav();
+    });
+    $('lvNav').addEventListener('click', function (e) { var it = e.target.closest('.lvIt'); if (it) lvPick(it.getAttribute('data-f'), it.getAttribute('data-e')); });
+    $('lvNav').addEventListener('change', function (e) {
+      if (e.target.id === 'lvSido') { LV.sido = e.target.value; LV.sgg = ''; lvNav(); }
+      if (e.target.id === 'lvSgg') { LV.sgg = e.target.value; lvNav(); }
+    });
+    $('lvToc').addEventListener('click', function (e) { var t = e.target.closest('[data-i]'); if (!t) return; var el = $('pt' + t.getAttribute('data-i')); if (el) $('lvDoc').scrollTop = el.offsetTop - $('lvDoc').offsetTop - 8; });
+    var lvT; $('lvQ').addEventListener('input', function () { clearTimeout(lvT); lvT = setTimeout(function () { if (LV.doc) lvDoc(); }, 200); });
+    $('lvDoc').addEventListener('click', function (e) { var u = e.target.closest('[data-url]'); if (!u) return; if (window.sketchup && sketchup.openUrl) sketchup.openUrl(u.getAttribute('data-url')); else window.open(u.getAttribute('data-url')); });
     $('sideClose').addEventListener('click', function () { $('side').classList.remove('open'); });
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape' && e.keyCode !== 27) return;
       e.preventDefault();
       if ($('modal').style.display === 'flex') { $('modal').style.display = 'none'; return; }
       if ($('glModal').style.display === 'flex') { $('glModal').style.display = 'none'; return; }
+      if ($('lv').style.display === 'grid' && $('modal').style.display !== 'flex') { if ($('lvQ').value) { $('lvQ').value = ''; if (LV.doc) lvDoc(); } else $('lv').style.display = 'none'; return; }
       if ($('askModal').style.display === 'flex') { $('askModal').style.display = 'none'; return; }
       if ($('apiModal').style.display === 'flex') { $('apiModal').style.display = 'none'; return; }
       if ($('side').classList.contains('open') && getComputedStyle($('sideClose')).display !== 'none') { $('side').classList.remove('open'); return; }
@@ -753,7 +882,7 @@ var App = (function () {
   function config(c) { cfg = Object.assign(cfg, c || {}); fillUpd(); if ($('apiModal').style.display === 'flex') fillApi(); renderRows(); renderDetail(); }
 
   bind();
-  return { load: load, lawResult: lawResult, lawStatus: lawStatus, config: config, snapMsg: snapMsg, updMsg: updMsg };
+  return { load: load, lawResult: lawResult, lawStatus: lawStatus, config: config, snapMsg: snapMsg, updMsg: updMsg, lawdb: lawdb };
 })();
 window.addEventListener('DOMContentLoaded', function () { if (window.sketchup) sketchup.ready(); });
 </script>

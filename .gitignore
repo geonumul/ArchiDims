@@ -4,3 +4,4 @@ __pycache__/
 plugin/kg_arch_dims/user_data.json
 plugin/kg_arch_dims/law_cache.json
 plugin/kg_arch_dims/law_snapshot.json
+plugin/kg_arch_dims/lawdb_cache/

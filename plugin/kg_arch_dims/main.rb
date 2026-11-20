@@ -114,6 +114,36 @@ module KG
       blk.call(e.message, 0)
     end
 
+    LAWDB_DIR = File.join(PLUGIN_DIR, 'lawdb_cache')
+
+    def self.lawdb_get(path, key)
+      return send_js('App.lawdb', 'path' => path, 'ok' => false, 'error' => '잘못된 경로') unless path =~ %r{\A[\w/]+\.json\z}
+      local = File.join(LAWDB_DIR, path.tr('/', '_'))
+      stamp = local + '.key'
+      fresh = File.exist?(local) && File.exist?(stamp) && File.read(stamp) == key.to_s
+      fresh &&= Time.now - File.mtime(local) < 86_400 if path == 'index.json'
+      if fresh
+        return send_raw('App.lawdb', path, File.read(local, encoding: 'UTF-8'))
+      end
+      http_get(REPO_RAW + 'lawdb/' + path + "?t=#{Time.now.to_i}") do |body, code|
+        body = body.dup.force_encoding('UTF-8')
+        if code == 200 && body.start_with?('{')
+          Dir.mkdir(LAWDB_DIR) unless Dir.exist?(LAWDB_DIR)
+          File.open(local, 'w:UTF-8') { |f| f.write(body) }
+          File.open(stamp, 'w') { |f| f.write(key.to_s) }
+          send_raw('App.lawdb', path, body)
+        elsif File.exist?(local)
+          send_raw('App.lawdb', path, File.read(local, encoding: 'UTF-8'))
+        else
+          send_js('App.lawdb', 'path' => path, 'ok' => false, 'error' => "내려받지 못했습니다 (응답 #{code}). 인터넷 연결을 확인하세요")
+        end
+      end
+    end
+
+    def self.send_raw(fn, path, json)
+      @dialog.execute_script("#{fn}({path:#{path.to_json},ok:true,data:#{json}})") if @dialog && @dialog.visible?
+    end
+
     def self.check_update(manual)
       http_get(REPO_RAW + "version.json?t=#{Time.now.to_i}") do |body, code|
         info = JSON.parse(body.dup.force_encoding('UTF-8')) rescue nil
@@ -185,6 +215,7 @@ module KG
         mode = pref('update_mode', '').to_s
         check_update(false) if !mode.empty? && Time.now.to_i - pref('update_checked', 0).to_i > WEEK
       end
+      @dialog.add_action_callback('lawdbGet') { |_ctx, path, key| lawdb_get(path.to_s, key) }
       @dialog.add_action_callback('updCheck') { |_ctx| check_update(true) }
       @dialog.add_action_callback('updInstall') { |_ctx| install_update }
       @dialog.add_action_callback('lawFetch') do |_ctx, json|
