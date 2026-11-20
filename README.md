@@ -14,22 +14,11 @@
 
 법제처 OPEN API는 신청할 때 등록한 IP에서만 응답합니다. 그래서 등록된 PC에서 스냅샷을 만들어 이 저장소에 올립니다.
 
-처음 한 번:
+등록된 PC에서 `setup.bat`을 내려받아 더블클릭하면 됩니다. Git·Python 확인(없으면 설치), 저장소 내려받기, 첫 갱신, 매주 월요일 10시 자동 실행 등록까지 한 번에 합니다.
 
-```
-git clone https://github.com/geonumul/ArchiDims.git
-cd ArchiDims
-python tools\update_snapshot.py --push
-```
-
-- 인증키(OC)를 물어보면 입력합니다. 입력한 키는 `tools/config.local.json`에 저장되고 저장소에는 올라가지 않습니다.
-- 이때 GitHub 로그인 창이 뜨면 로그인합니다. 이후에는 자동으로 푸시됩니다.
-
-자동 실행 등록:
-
-- `tools\register_task.bat`를 더블클릭합니다.
-- 매주 월요일 10시에 실행되고, 그 시간에 PC가 꺼져 있었으면 다음에 켤 때 실행됩니다.
-- 법령이 바뀐 경우에만 커밋합니다. 실행 기록은 `tools/update.log`에 남습니다.
+- 인증키(OC)를 물어보면 입력합니다. `tools/config.local.json`에 저장되고 저장소에는 올라가지 않습니다.
+- GitHub 로그인 창이 뜨면 로그인합니다.
+- 실행 기록은 `tools/update.log`에 남습니다. 수치가 원문과 안 맞는 항목은 "확인 필요"로 적힙니다.
 
 ## 새 버전 배포 (관리자용)
 
