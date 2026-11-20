@@ -20,6 +20,8 @@ def forms(d):
                 out += [g(x / 10) + '센티미터', g(x / 1000) + '미터', g(x) + '밀리미터', g(x / 10) + ' 이', g(x / 1000) + ' 이', g(x / 1000) + ' ']
             elif isinstance(x, (int, float)):
                 out.append('%g' % x)
+                if x >= 1000 and x % 100 == 0:
+                    out.append(('%d천' % (x // 1000)) + (('%d' % (x % 1000)) if x % 1000 else ''))
             elif isinstance(x, str):
                 m = re.search(r'1/(\d+)', x)
                 if m:
