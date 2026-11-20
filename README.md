@@ -31,6 +31,15 @@ python tools\update_snapshot.py --push
 - 매주 월요일 10시에 실행되고, 그 시간에 PC가 꺼져 있었으면 다음에 켤 때 실행됩니다.
 - 법령이 바뀐 경우에만 커밋합니다. 실행 기록은 `tools/update.log`에 남습니다.
 
+## 새 버전 배포 (관리자용)
+
+1. `plugin/` 안의 파일을 고칩니다.
+2. `plugin/kg_arch_dims.rb`의 `VERSION`과 `version.json`의 `version`을 같은 값으로 올립니다.
+3. `plugin` 폴더 안의 `kg_arch_dims.rb`와 `kg_arch_dims` 폴더를 zip으로 묶어 `dist/arch_dims.rbz`로 저장합니다.
+4. 커밋하고 푸시합니다.
+
+설치한 사람은 처음 열 때 자동 업데이트 여부를 고릅니다. 자동을 고른 사람은 매주 한 번 확인해서 자동 설치되고, 직접을 고른 사람은 창 위쪽에 업데이트 버튼이 뜹니다.
+
 ## 구성
 
 | 경로 | 내용 |

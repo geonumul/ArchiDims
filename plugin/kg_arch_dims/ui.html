@@ -150,6 +150,14 @@ dd{margin:0}
 #apiModal .note{color:var(--sub);font-size:11px}
 #apiRes .it{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #f0f1f5}
 #apiModal .ft{display:flex;justify-content:flex-end;gap:6px;padding:12px 18px;border-top:1px solid var(--line)}
+#updBtn{display:none;background:#fff4dc;border-color:#e8c27a;color:#7a5200;font-weight:600}
+#askModal{position:fixed;inset:0;background:rgba(20,25,35,.45);display:none;align-items:center;justify-content:center;z-index:11}
+#askModal .card{width:440px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+#askModal h4{margin:0;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px}
+#askModal .bd{padding:14px 18px;font-size:12.5px;line-height:1.65}
+#askModal .ft{display:flex;justify-content:flex-end;gap:6px;padding:12px 18px;border-top:1px solid var(--line)}
+.radio{display:flex;gap:14px;margin:6px 0}
+.radio label{display:flex;gap:5px;align-items:center;cursor:pointer}
 </style>
 </head>
 <body>
@@ -163,7 +171,8 @@ dd{margin:0}
     <div class="seg" id="units"><button data-u="mm" class="on">mm</button><button data-u="cm">cm</button><button data-u="m">m</button></div>
     <label class="toggle"><input type="checkbox" id="lawOnly">법정 기준만</label>
     <button class="btn" id="glBtn">용어 풀이</button>
-    <button class="btn" id="apiBtn">법령 API</button>
+    <button class="btn" id="apiBtn">설정</button>
+    <button class="btn" id="updBtn"></button>
   </div>
   <div id="body">
     <div id="cats"></div>
@@ -186,10 +195,26 @@ dd{margin:0}
 </div>
 <div id="toast"></div>
 <div id="tip"></div>
+<div id="askModal">
+  <div class="card">
+    <h4>자동 업데이트를 켤까요?</h4>
+    <div class="bd">
+      켜면 매주 한 번 새 버전을 확인해서 자동으로 설치합니다. 치수 데이터와 기능이 최신으로 유지됩니다.<br><br>
+      업데이트 파일은 제작자의 GitHub 저장소(geonumul/ArchiDims)에서 받습니다. 자동으로 받는 것이 싫으면 "직접 업데이트"를 고르세요. 새 버전이 나오면 위쪽에 버튼만 표시됩니다.<br><br>
+      <span class="note">나중에 "설정"에서 바꿀 수 있습니다.</span>
+    </div>
+    <div class="ft"><button class="btn" id="askManual">직접 업데이트</button><button class="btn pri" id="askAuto">자동 업데이트 켜기</button></div>
+  </div>
+</div>
 <div id="apiModal">
   <div class="card">
-    <h4>법령 데이터</h4>
+    <h4>설정</h4>
     <div class="bd">
+      <b>프로그램 업데이트</b> <span class="note" id="verInfo"></span>
+      <div class="radio"><label><input type="radio" name="um" value="auto">매주 자동 업데이트</label><label><input type="radio" name="um" value="manual">버튼으로 직접 업데이트</label></div>
+      <div class="rowf" style="margin-top:4px"><button class="btn" id="updCheck">지금 확인</button><button class="btn pri" id="updNow" style="display:none">업데이트 설치</button></div>
+      <div class="note" id="updMsg"></div>
+      <div style="margin-top:16px"></div>
       <b>법령 스냅샷</b>
       <div class="note" id="snapInfo"></div>
       <div class="rowf"><input id="snapUrl" placeholder="스냅샷 주소 (law_snapshot.json)"><button class="btn" id="snapUrlSave">저장</button><button class="btn pri" id="snapNow">지금 업데이트</button></div>
@@ -380,7 +405,7 @@ var App = (function () {
     $('glList').innerHTML = h || '<div class="empty">없음</div>';
   }
 
-  var cfg = { oc: '', live: false, dataDate: '20261120', status: null, snap: null, snapUrl: '' }, lawRes = {}, lawBusy = {};
+  var cfg = { updateMode: '', version: '', avail: '', oc: '', live: false, dataDate: '20261120', status: null, snap: null, snapUrl: '' }, lawRes = {}, lawBusy = {};
   function lawName(src) {
     return String(src || '').replace(/\s*별표\s*\d+(의\s*\d+)?\s*$/, '').replace(/\s*제\s*\d+\s*조(\s*의\s*\d+)?\s*$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim();
   }
@@ -441,7 +466,7 @@ var App = (function () {
       if (r.error) h += '<div class="err">' + esc(r.error) + '</div>';
       return h + '</div></div>';
     }
-    h += '<div class="meta"><b style="color:var(--ink)">' + esc(r.law) + '</b><br>현행 시행일 ' + ymd(r.eff) + (r.prom ? ' · 공포 ' + ymd(r.prom) : '') + '</div>';
+    h += '<div class="meta"><b style="color:var(--ink)">' + esc(r.law) + '</b><br>현행 시행일 ' + ymd(r.eff) + (r.prom ? ' · 공포 ' + ymd(r.prom) : '') + (snap && cfg.snap && cfg.snap.generated ? '<br>' + esc(cfg.snap.generated) + ' 기준' : '') + '</div>';
     h += r.changed ? '<span class="warn">데이터 작성(' + ymd(cfg.dataDate) + ') 이후 개정 · 수치 확인 필요</span>' : '<span class="ok">데이터 작성 시점 이후 개정 없음</span>';
     (r.items || []).forEach(function (it) { h += '<div class="art"><b>' + esc(it.title) + '</b><pre>' + markVals(it.text, d) + '</pre></div>'; });
     if (r.error) h += '<div class="err" style="margin-top:8px">' + esc(r.error) + '</div>';
@@ -609,6 +634,14 @@ var App = (function () {
       if (e.target.id === 'lawLoad') { var d = byId(selId); if (d) { delete lawRes[d._id]; lawFetch(d, true); renderDetail(); } }
     });
     $('apiBtn').addEventListener('click', function () { fillApi(); renderApi(); $('apiModal').style.display = 'flex'; });
+    function setMode(m) { if (window.sketchup) sketchup.setPref(JSON.stringify({ updateMode: m })); cfg.updateMode = m; $('askModal').style.display = 'none'; }
+    $('askAuto').addEventListener('click', function () { setMode('auto'); toast('자동 업데이트 켜짐'); });
+    $('askManual').addEventListener('click', function () { setMode('manual'); });
+    [].forEach.call(document.querySelectorAll('input[name=um]'), function (r) { r.addEventListener('change', function () { setMode(this.value); }); });
+    $('updCheck').addEventListener('click', function () { if (!window.sketchup) return; $('updMsg').textContent = '확인 중...'; sketchup.updCheck(); });
+    function doInstall() { if (!window.sketchup) return; toast('업데이트 내려받는 중...'); $('updMsg').textContent = '내려받는 중...'; sketchup.updInstall(); }
+    $('updNow').addEventListener('click', doInstall);
+    $('updBtn').addEventListener('click', doInstall);
     $('snapUrlSave').addEventListener('click', function () { if (window.sketchup) { sketchup.setPref(JSON.stringify({ snapUrl: $('snapUrl').value.trim() })); toast('주소 저장됨'); } });
     $('snapNow').addEventListener('click', function () { if (!window.sketchup) return; $('snapMsg').textContent = '내려받는 중...'; sketchup.snapUpdate(); });
     $('liveOn').addEventListener('change', function () { if (window.sketchup) sketchup.setPref(JSON.stringify({ live: this.checked })); lawRes = {}; });
@@ -629,6 +662,7 @@ var App = (function () {
       e.preventDefault();
       if ($('modal').style.display === 'flex') { $('modal').style.display = 'none'; return; }
       if ($('glModal').style.display === 'flex') { $('glModal').style.display = 'none'; return; }
+      if ($('askModal').style.display === 'flex') { $('askModal').style.display = 'none'; return; }
       if ($('apiModal').style.display === 'flex') { $('apiModal').style.display = 'none'; return; }
       if ($('side').classList.contains('open') && getComputedStyle($('sideClose')).display !== 'none') { $('side').classList.remove('open'); return; }
       if ($('q').value) { $('q').value = ''; render(); $('q').focus(); return; }
@@ -696,16 +730,29 @@ var App = (function () {
     var b = $('checkAll'); b.disabled = false; b.textContent = '지금 확인';
     renderApi(res); renderRows();
   }
+  function updMsg(m) {
+    $('updMsg').textContent = m.msg; $('updMsg').style.color = m.ok ? '#1d7a3e' : '#b3261e';
+    if ($('apiModal').style.display !== 'flex') toast(m.msg);
+  }
+  function fillUpd() {
+    $('verInfo').textContent = '현재 버전 ' + (cfg.version || '');
+    [].forEach.call(document.querySelectorAll('input[name=um]'), function (r) { r.checked = r.value === cfg.updateMode; });
+    $('updNow').style.display = cfg.avail ? '' : 'none';
+    $('updBtn').style.display = cfg.avail ? 'inline-block' : 'none';
+    $('updBtn').textContent = '새 버전 ' + cfg.avail + ' · 업데이트';
+    if (window.sketchup && cfg.updateMode === '' && !fillUpd.asked) { fillUpd.asked = true; $('askModal').style.display = 'flex'; }
+  }
   function fillApi() {
+    fillUpd();
     $('ocIn').value = cfg.oc || ''; $('snapUrl').value = cfg.snapUrl || ''; $('liveOn').checked = !!cfg.live;
     var sn = cfg.snap;
     $('snapInfo').textContent = sn ? '현재 스냅샷: ' + (sn.generated || '') + ' 기준 · 항목 ' + Object.keys(sn.items || {}).length + '개 · 하루 한 번 자동 업데이트' : '스냅샷 없음';
   }
   function snapMsg(m) { $('snapMsg').textContent = m.msg; $('snapMsg').style.color = m.ok ? '#1d7a3e' : '#b3261e'; fillApi(); }
-  function config(c) { cfg = Object.assign(cfg, c || {}); if ($('apiModal').style.display === 'flex') fillApi(); renderRows(); renderDetail(); }
+  function config(c) { cfg = Object.assign(cfg, c || {}); fillUpd(); if ($('apiModal').style.display === 'flex') fillApi(); renderRows(); renderDetail(); }
 
   bind();
-  return { load: load, lawResult: lawResult, lawStatus: lawStatus, config: config, snapMsg: snapMsg };
+  return { load: load, lawResult: lawResult, lawStatus: lawStatus, config: config, snapMsg: snapMsg, updMsg: updMsg };
 })();
 window.addEventListener('DOMContentLoaded', function () { if (window.sketchup) sketchup.ready(); });
 </script>
