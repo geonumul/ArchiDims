@@ -426,7 +426,7 @@ var App = (function () {
         } else if (typeof x === 'number') {
           out.push(String(x) + (d.u === '%' ? '퍼센트' : ''));
         } else if (typeof x === 'string' && /^1\/\d+/.test(x)) {
-          var n = x.split('/')[1]; out.push('1:' + n, '1/' + n, n + '분의 1');
+          var n = x.split('/')[1]; out.push('1:' + n, '1 : ' + n, '1/' + n, n + '분의 1');
         }
       });
     });
@@ -452,6 +452,7 @@ var App = (function () {
   }
   function lawHtml(d) {
     var snap = !useLive(), r = snap ? (cfg.snap && cfg.snap.items && cfg.snap.items[itemKey(d)]) : lawRes[d._id];
+    if (snap && r && r.items && cfg.snap.arts) r = Object.assign({}, r, { items: r.items.map(function (x) { return typeof x === 'string' ? (cfg.snap.arts[x] || { title: x, text: '' }) : x; }) });
     var h = '<div class="lawbox"><div class="lh"><span>법령 원문 (법제처' + (snap ? ' · 스냅샷' : ' · 실시간') + ')</span>';
     if (r && r.url) h += '<button class="lbtn" data-url="' + esc(r.url) + '">사이트에서 열기</button>';
     h += '</div><div class="lb">';

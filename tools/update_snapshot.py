@@ -268,6 +268,20 @@ def build():
             snap['laws'][norm(law['name'])] = {'name': law['name'], 'eff': law['eff'], 'changed': law['eff'] > DATA_DATE}
         if i % 20 == 0:
             log(f'{i}/{len(targets)}')
+    arts, idx = {}, {}
+    for r in snap['items'].values():
+        if r.get('admrul') or not r.get('items'):
+            continue
+        ids = []
+        for a in r['items']:
+            key = r['law'] + '|' + a['title']
+            if key not in idx:
+                idx[key] = 'a' + str(len(idx))
+                arts[idx[key]] = a
+            ids.append(idx[key])
+        r['items'] = ids
+    snap['version'] = 2
+    snap['arts'] = arts
     snap['generated'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     log(f'완료: 항목 {len(snap["items"])}개, 법령 {len(snap["laws"])}개, 확인 필요 {fails}개')
     return snap
