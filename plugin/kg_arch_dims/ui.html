@@ -294,6 +294,18 @@ dd{margin:0}
 </div>
 <script src="glossary.js"></script>
 <script>
+function sk(name) {
+  var args = [].slice.call(arguments, 1);
+  try {
+    if (window.sketchup && typeof sketchup[name] === 'function') { sketchup[name].apply(sketchup, args); return true; }
+  } catch (e) {}
+  if (window.sketchup && !sk.warned) {
+    sk.warned = true;
+    var t = document.getElementById('toast');
+    if (t) { t.textContent = '스케치업을 완전히 껐다 켜야 새 버전이 적용됩니다'; t.style.opacity = 1; setTimeout(function () { t.style.opacity = 0; }, 5000); }
+  }
+  return false;
+}
 var App = (function () {
   var ORDER = ['인체치수','계단','경사로','난간','복도·통로','출입문·창호','층고·반자','피난·안전','대지·도로','주차','무장애(BF)','현관','주방','다용도실·세탁','욕실','침실·수납','거실·식당','사무·상업','전기·설비','외부·조경','자재 규격','주거기준'];
   var CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
@@ -487,7 +499,7 @@ var App = (function () {
     if (!window.sketchup || !sketchup.lawFetch || !useLive()) return;
     if (lawBusy[d._id] || (!force && lawRes[d._id])) return;
     lawBusy[d._id] = 1;
-    sketchup.lawFetch(JSON.stringify({ id: d._id, src: d.src, hints: lawHints(d) }));
+    sk('lawFetch', JSON.stringify({ id: d._id, src: d.src, hints: lawHints(d) }));
   }
   function lawHtml(d) {
     var snap = !useLive(), r = snap ? (cfg.snap && cfg.snap.items && cfg.snap.items[itemKey(d)]) : lawRes[d._id];
@@ -534,7 +546,7 @@ var App = (function () {
   var LV = { idx: null, tab: 'law', sido: '', sgg: '', file: '', doc: null, docs: {}, wait: {} };
   function lvReq(path, key) {
     if (LV.wait[path]) return; LV.wait[path] = 1;
-    if (window.sketchup && sketchup.lawdbGet) sketchup.lawdbGet(path, key || '');
+    if (window.sketchup && sketchup.lawdbGet) sk('lawdbGet', path, key || '');
     else fetch('https://raw.githubusercontent.com/geonumul/ArchiDims/main/lawdb/' + path).then(function (r) { return r.json(); }).then(function (d) { lawdb({ path: path, ok: true, data: d }); }).catch(function (e) { lawdb({ path: path, ok: false, error: String(e) }); });
   }
   function lawdb(r) {
@@ -721,7 +733,7 @@ var App = (function () {
       ['c','n','min','rec','max','u','src','note','k'].forEach(function (k) { if (has(d[k])) o[k] = d[k]; });
       return o;
     });
-    if (window.sketchup) sketchup.saveUser(JSON.stringify(list)); else render();
+    if (window.sketchup) sk('saveUser', JSON.stringify(list)); else render();
   }
 
   function bind() {
@@ -745,31 +757,31 @@ var App = (function () {
     $('q').addEventListener('input', render);
     $('detail').addEventListener('click', function (e) {
       var u = e.target.closest('[data-url]');
-      if (u) { if (window.sketchup && sketchup.openUrl) sketchup.openUrl(u.getAttribute('data-url')); else window.open(u.getAttribute('data-url')); return; }
+      if (u) { if (window.sketchup && sketchup.openUrl) sk('openUrl', u.getAttribute('data-url')); else window.open(u.getAttribute('data-url')); return; }
       if (e.target.id === 'lawLoad') { var d = byId(selId); if (d) { delete lawRes[d._id]; lawFetch(d, true); renderDetail(); } }
     });
     $('apiBtn').addEventListener('click', function () { fillApi(); renderApi(); $('apiModal').style.display = 'flex'; });
-    function setMode(m) { if (window.sketchup) sketchup.setPref(JSON.stringify({ updateMode: m })); cfg.updateMode = m; $('askModal').style.display = 'none'; }
-    $('askAuto').addEventListener('click', function () { setMode('auto'); toast('자동 업데이트 켜짐'); });
+    function setMode(m) { var ok = window.sketchup ? sk('setPref', JSON.stringify({ updateMode: m })) : false; cfg.updateMode = m; $('askModal').style.display = 'none'; return ok; }
+    $('askAuto').addEventListener('click', function () { if (setMode('auto')) toast('자동 업데이트 켜짐'); });
     $('askManual').addEventListener('click', function () { setMode('manual'); });
     [].forEach.call(document.querySelectorAll('input[name=um]'), function (r) { r.addEventListener('change', function () { setMode(this.value); }); });
-    $('updCheck').addEventListener('click', function () { if (!window.sketchup) return; $('updMsg').textContent = '확인 중...'; sketchup.updCheck(); });
-    function doInstall() { if (!window.sketchup) return; toast('업데이트 내려받는 중...'); $('updMsg').textContent = '내려받는 중...'; sketchup.updInstall(); }
+    $('updCheck').addEventListener('click', function () { if (!window.sketchup) return; $('updMsg').textContent = '확인 중...'; sk('updCheck'); });
+    function doInstall() { if (!window.sketchup) return; toast('업데이트 내려받는 중...'); $('updMsg').textContent = '내려받는 중...'; sk('updInstall'); }
     $('updNow').addEventListener('click', doInstall);
     $('updBtn').addEventListener('click', doInstall);
-    $('snapUrlSave').addEventListener('click', function () { if (window.sketchup) { sketchup.setPref(JSON.stringify({ snapUrl: $('snapUrl').value.trim() })); toast('주소 저장됨'); } });
-    $('snapNow').addEventListener('click', function () { if (!window.sketchup) return; $('snapMsg').textContent = '내려받는 중...'; sketchup.snapUpdate(); });
-    $('liveOn').addEventListener('change', function () { if (window.sketchup) sketchup.setPref(JSON.stringify({ live: this.checked })); lawRes = {}; });
+    $('snapUrlSave').addEventListener('click', function () { if (window.sketchup) { sk('setPref', JSON.stringify({ snapUrl: $('snapUrl').value.trim() })); toast('주소 저장됨'); } });
+    $('snapNow').addEventListener('click', function () { if (!window.sketchup) return; $('snapMsg').textContent = '내려받는 중...'; sk('snapUpdate'); });
+    $('liveOn').addEventListener('change', function () { if (window.sketchup) sk('setPref', JSON.stringify({ live: this.checked })); lawRes = {}; });
     $('apiClose').addEventListener('click', function () { $('apiModal').style.display = 'none'; });
     $('apiModal').addEventListener('click', function (e) { if (e.target === this) this.style.display = 'none'; });
     $('ocSave').addEventListener('click', function () {
-      if (window.sketchup && sketchup.setOC) { sketchup.setOC($('ocIn').value.trim()); lawRes = {}; toast('인증키 저장됨'); }
+      if (window.sketchup && sketchup.setOC) { sk('setOC', $('ocIn').value.trim()); lawRes = {}; toast('인증키 저장됨'); }
     });
     $('checkAll').addEventListener('click', function () {
       if (!window.sketchup || !sketchup.lawCheckAll) { toast('스케치업 안에서만 동작합니다'); return; }
       this.disabled = true; this.textContent = '확인 중...';
       $('apiRes').innerHTML = '<div class="note">법령 ' + lawNames().length + '개 조회 중...</div>';
-      sketchup.lawCheckAll(JSON.stringify(lawNames()));
+      sk('lawCheckAll', JSON.stringify(lawNames()));
     });
     $('lvBtn').addEventListener('click', lvOpen);
     $('lvGl').addEventListener('click', function () { $('glBtn').click(); });
@@ -786,7 +798,7 @@ var App = (function () {
     });
     $('lvToc').addEventListener('click', function (e) { var t = e.target.closest('[data-i]'); if (!t) return; var el = $('pt' + t.getAttribute('data-i')); if (el) $('lvDoc').scrollTop = el.offsetTop - $('lvDoc').offsetTop - 8; });
     var lvT; $('lvQ').addEventListener('input', function () { clearTimeout(lvT); lvT = setTimeout(function () { if (LV.doc) lvDoc(); }, 200); });
-    $('lvDoc').addEventListener('click', function (e) { var u = e.target.closest('[data-url]'); if (!u) return; if (window.sketchup && sketchup.openUrl) sketchup.openUrl(u.getAttribute('data-url')); else window.open(u.getAttribute('data-url')); });
+    $('lvDoc').addEventListener('click', function (e) { var u = e.target.closest('[data-url]'); if (!u) return; if (window.sketchup && sketchup.openUrl) sk('openUrl', u.getAttribute('data-url')); else window.open(u.getAttribute('data-url')); });
     $('sideClose').addEventListener('click', function () { $('side').classList.remove('open'); });
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape' && e.keyCode !== 27) return;
@@ -798,7 +810,7 @@ var App = (function () {
       if ($('apiModal').style.display === 'flex') { $('apiModal').style.display = 'none'; return; }
       if ($('side').classList.contains('open') && getComputedStyle($('sideClose')).display !== 'none') { $('side').classList.remove('open'); return; }
       if ($('q').value) { $('q').value = ''; render(); $('q').focus(); return; }
-      if (window.sketchup && sketchup.close) sketchup.close();
+      if (window.sketchup && sketchup.close) sk('close');
     }, true);
     $('qClear').addEventListener('click', function () { $('q').value = ''; render(); $('q').focus(); });
     $('lawOnly').addEventListener('change', render);
@@ -886,7 +898,7 @@ var App = (function () {
   bind();
   return { load: load, lawResult: lawResult, lawStatus: lawStatus, config: config, snapMsg: snapMsg, updMsg: updMsg, lawdb: lawdb };
 })();
-window.addEventListener('DOMContentLoaded', function () { if (window.sketchup) sketchup.ready(); });
+window.addEventListener('DOMContentLoaded', function () { if (window.sketchup) { sk('ready'); if (typeof sketchup.setPref !== 'function') sk('setPref', '{}'); } });
 </script>
 </body>
 </html>
